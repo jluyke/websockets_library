@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Sockets</title>
+		<script type="text/javascript">
+		var socket;
+		var mouseX, mouseY, mouseX2, mouseY2;
+		var uID = new Array();
+		var uName = new Array();
+		var uX = new Array();
+		var uY = new Array();
+		window.onload = connect;
+		window.onunload = closeSocket;
+		window.onmousemove = mouseMove;
+		
+		function connect() {
+			socket = new WebSocket("ws://127.0.0.1:8001/session");
+			//socket = new WebSocket("ws://68.5.231.168:8002/session");
+			socket.onopen = function(){
+		    	//alert("Socket opened.");
+		    };
+		    socket.onclose = function() {
+		    	alert("Socket closed.");
+		    };
+		    socket.onmessage = function (msg) {
+				var msgArray = msg.data.split(" ");
+				var uID2, uN2, uX2, uY2;
+				for (var i = 0; i < msgArray.length; i++) {
+					var split = msgArray[i].split("=");
+					switch (split[0]) {
+						case "i":
+							uID2 = split[1];
+							break;
+						case "n":
+							uN2 = split[1];
+							break;
+						case "x":
+							uX2 = split[1];
+							break;
+						case "y":
+							uY2 = split[1];
+							break;
+						default:
+							break;
+					}
+				}
+				var found = 0;
+				for (var i = 0; i < uID.length; i++) {
+					if (uID2 == uID[i]) {
+						uName[i] = uN2;
+						uX[i] = uX2;
+						uY[i] = uY2;
+						found = 1;
+					}
+				}
+				if (found == 0) {
+					var len = uID.length;
+					uID[len] = uID2;
+					uName[len] = uN2;
+					uX[len] = uX2;
+					uY[len] = uY2;
+					/*uID.splice(uID.length, 0, uID2);
+					uName.splice(uName.length, 0, uN2);
+					uX.splice(uX.length, 0, uX2);
+					uY.splice(uY.length, 0, uY2);*/
+				}
+			};
+		}
+		function startCanvas() {
+			socket.send("name=" + document.getElementById("fieldName").value);
+			var parent = document.getElementById("parent");
+			//parent.removeChild(document.getElementById("fieldName"));
+			document.getElementById("fieldName").style.display = "none";
+			parent.removeChild(document.getElementById("buttonStart"));
+			canvas = document.getElementById("canvasid");
+			canvas.width = window.innerWidth - 40;
+			canvas.height = window.innerHeight - 40;
+			rect = canvas.getContext('2d');
+			rect.clearRect(0, 0, canvas.width, canvas.height);
+			rect.fillRect(0,15,50,50);
+			setInterval(draw, 1);
+		}
+		function draw() {
+			canvas.width = window.innerWidth - 40;
+			canvas.height = window.innerHeight - 40;
+			rect.clearRect(0, 0, canvas.width, canvas.height);
+			rect.fillRect(mouseX-25,mouseY-25,50,50);
+			rect.fillText(document.getElementById("fieldName").value, mouseX, mouseY+35)
+			//rect.fillRect(poop,0,50,50);
+			
+			for (var i = 0; i < uID.length; i++) {
+				rect.fillRect(parseInt(uX[i])-25, parseInt(uY[i])-25, 50, 50);
+				rect.fillText(uName[i], parseInt(uX[i]), parseInt(uY[i])+35);
+				
+			}
+			if (mouseX != mouseX2 || mouseY != mouseY2) {
+				socket.send("x=" + mouseX + " y=" + mouseY);
+			}
+			mouseX2 = mouseX;
+			mouseY2 = mouseY;
+		}
+		function mouseMove(e)
+		{
+		    if(e.offsetX) {
+		        mouseX = e.offsetX;
+		        mouseY = e.offsetY;
+		    }
+		    else if(e.layerX) {
+		        mouseX = e.layerX;
+		        mouseY = e.layerY;
+		    }
+	    }
+		function clearField() {
+			var field = document.getElementById("fieldName");
+			if (field.value == "name") {
+				field.value = "";
+			}
+		}
+		function closeSocket() {
+			socket.send((255).toString(16))
+			socket.close();
+		}
+	</script>
+	</head>
+	<body>
+		<div id="parent">
+   			<input type="text" id="fieldName" value="name" onclick="clearField()" />
+   			<button type="button" id="buttonStart" onclick="startCanvas()">Start!</button>
+   		</div>
+   		<canvas id="canvasid" width="0" height="0">
+			Update your browser to a current one.
+		</canvas>
+	</body>
+</html>
