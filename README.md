@@ -5,8 +5,6 @@ To use the Async version for pong sample, Visual Studio 10 is required which use
 
 This library conforms to the [hybi 17 protocol][3].
 
-Free, [Apache License, Version 2.0][1].
-
 [1]: http://www.apache.org/licenses/LICENSE-2.0.html
 [2]: http://www.microsoft.com/en-us/download/details.aspx?id=9983
 [3]: http://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-17
