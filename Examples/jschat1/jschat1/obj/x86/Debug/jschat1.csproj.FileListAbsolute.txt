@@ -1,0 +1,5 @@
+c:\users\ethernex\documents\visual studio 2010\Projects\jschat1\jschat1\bin\Debug\jschat1.exe
+c:\users\ethernex\documents\visual studio 2010\Projects\jschat1\jschat1\bin\Debug\jschat1.pdb
+c:\users\ethernex\documents\visual studio 2010\Projects\jschat1\jschat1\obj\x86\Debug\ResolveAssemblyReference.cache
+c:\users\ethernex\documents\visual studio 2010\Projects\jschat1\jschat1\obj\x86\Debug\jschat1.exe
+c:\users\ethernex\documents\visual studio 2010\Projects\jschat1\jschat1\obj\x86\Debug\jschat1.pdb

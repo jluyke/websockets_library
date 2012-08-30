@@ -1,0 +1,5 @@
+c:\users\ethernex\documents\visual studio 2010\Projects\jsserver3\jsserver3\bin\Debug\jsserver3.exe
+c:\users\ethernex\documents\visual studio 2010\Projects\jsserver3\jsserver3\bin\Debug\jsserver3.pdb
+c:\users\ethernex\documents\visual studio 2010\Projects\jsserver3\jsserver3\obj\x86\Debug\ResolveAssemblyReference.cache
+c:\users\ethernex\documents\visual studio 2010\Projects\jsserver3\jsserver3\obj\x86\Debug\jsserver3.exe
+c:\users\ethernex\documents\visual studio 2010\Projects\jsserver3\jsserver3\obj\x86\Debug\jsserver3.pdb

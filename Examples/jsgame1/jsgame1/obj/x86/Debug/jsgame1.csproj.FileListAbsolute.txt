@@ -1,0 +1,7 @@
+c:\users\ethernex\documents\visual studio 2010\Projects\jsgame1\jsgame1\obj\x86\Debug\ResolveAssemblyReference.cache
+c:\users\ethernex\documents\visual studio 2010\Projects\jsgame1\jsgame1\bin\Debug\jsgame1.exe
+c:\users\ethernex\documents\visual studio 2010\Projects\jsgame1\jsgame1\bin\Debug\jsgame1.pdb
+c:\users\ethernex\documents\visual studio 2010\Projects\jsgame1\jsgame1\bin\Debug\AsyncCtpLibrary.dll
+c:\users\ethernex\documents\visual studio 2010\Projects\jsgame1\jsgame1\bin\Debug\AsyncCtpLibrary.xml
+c:\users\ethernex\documents\visual studio 2010\Projects\jsgame1\jsgame1\obj\x86\Debug\jsgame1.exe
+c:\users\ethernex\documents\visual studio 2010\Projects\jsgame1\jsgame1\obj\x86\Debug\jsgame1.pdb
