@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Chat</title>
+		<script type="text/javascript">
+		var socket;
+		var setup = 0;
+		var typefield;
+		var name;
+		var chatArray = new Array();
+		window.onload = function() {
+			typefield = document.getElementById("fieldType");
+			typefield.style.display = "none";
+			connect();
+		}
+		window.onunload = function() {
+			var bytes = new Uint8Array(1);
+			bytes[0] = 255;
+			socket.send(bytes.buffer); //sends d/c
+			socket.close();
+		}
+		window.onresize = canvasSizing;
+		
+		function connect() {
+			socket = new WebSocket("ws://127.0.0.1:8001/session");
+			
+			socket.onopen = function(){
+		    	document.getElementById("label1").innerHTML = "name";
+				typefield.style.display = "";
+				typefield.focus();
+		    };
+		    socket.onclose = function() {
+		    	document.getElementById("label1").innerHTML = "Server unavailable";
+		    	typefield.style.display = "none";
+		    	canvas.width = 0;
+				canvas.height = 0;
+		    };
+		    socket.onmessage = function (msg) {
+		    	if (setup == 1) {
+		    		addMsgArray(msg.data);
+		    	}
+			};
+		}
+		function sendField() {
+			if (setup == 0) {
+				name = typefield.value;
+				socket.send(name);
+				canvas = document.getElementById("canvasid");
+				rect = canvas.getContext('2d');
+				canvasSizing();
+				rect.fillText("start typing and press enter to send!", 0, canvas.height - 10);
+				document.getElementById("label1").innerHTML = "";
+				setup = 1;
+			} else if (setup == 1) {
+				if (typefield.value != "") {
+					socket.send(typefield.value);
+					addMsgArray(name + ": " + typefield.value);
+				}
+			}
+			typefield.value = "";
+		}
+		function addMsgArray(msg) {
+			for (var i = chatArray.length; i > 0; i--) { //move strings down array
+				chatArray[i] = chatArray[i - 1];
+			}
+			chatArray[0] = msg;
+			draw();
+		}
+		function draw() {
+			rect.clearRect(0, 0, canvas.width, canvas.height);
+			for (var i = canvas.height - 10, j = 0; i > 0, j < chatArray.length; i -= 20, j++) {
+				rect.fillText(chatArray[j], 0, i);
+			}
+		}
+		function canvasSizing() {
+			if (document.getElementById("label1").innerHTML != "Server unavailable") {
+				var w = window.innerWidth - 40;
+				var h = window.innerHeight - 50;
+				/*if (w > 500)
+					w = 500;
+				if (h > 500)
+					h = 500;*/
+				canvas.width = w;
+				canvas.height = h;
+				draw();
+			}
+		}
+	</script>
+	</head>
+	<body>
+		<canvas id="canvasid" width="0" height="0">
+			Update your browser to a current one.
+		</canvas><br />
+		<div id="label1" style="float: left;">Server unavailable</div>
+		<input type="text" id="fieldType" style="float: left;" onkeydown="if (event.keyCode == 13) sendField()"/>
+		
+	</body>
+</html>

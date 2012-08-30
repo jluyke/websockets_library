@@ -15,7 +15,6 @@
 		
 		function connect() {
 			socket = new WebSocket("ws://127.0.0.1:8001/session");
-			//socket = new WebSocket("ws://68.5.231.168:8002/session");
 			socket.onopen = function(){
 		    	//alert("Socket opened.");
 		    };
