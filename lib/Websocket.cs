@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
 using System.Net;
@@ -25,7 +25,7 @@ class Websocket
     /// Accepts and pairs server and client with handshake, returns client socket. If no pending clients, returns null.
     /// </summary>
     /// <returns>Accepted socket</returns>
-    public Socket AcceptPendingClient()
+    public Socket AcceptSocket()
     {
         Socket newclient = null;
         if (server.Pending()) {
@@ -33,7 +33,7 @@ class Websocket
             Console.WriteLine("[{0}] requested handshake.", newclient.RemoteEndPoint);
             byte[] buffer = new byte[260];
             int len = newclient.Receive(buffer); //if this is fragmented, full string will not be received and crashes
-            Console.WriteLine("debug: handshake request length: " + len); //full msg length is 220-240
+            //Console.WriteLine("debug: handshake request length: " + len); //full msg length is 220-240
             if (len >= 200) {
                 string reply = HandshakeResponse(buffer);
                 newclient.Send(UTF8Encoding.UTF8.GetBytes(reply));
@@ -47,9 +47,20 @@ class Websocket
     /// </summary>
     /// <param name="socket"></param>
     /// <param name="message"></param>
-    public void Send(Socket socket, string message)
+    public void SendString(Socket socket, string message)
     {
-        byte[] buffer = toSend(message);
+        byte[] buffer = UTF8Encoding.UTF8.GetBytes(message);
+        buffer = toSend(buffer);
+        socket.Send(buffer);
+    }
+    /// <summary>
+    /// Sends data as byte array to specified socket.
+    /// </summary>
+    /// <param name="socket"></param>
+    /// <param name="message"></param>
+    public void Send(Socket socket, byte[] buffer)
+    {
+        buffer = toSend(buffer);
         socket.Send(buffer);
     }
     /// <summary>
@@ -57,12 +68,32 @@ class Websocket
     /// </summary>
     /// <param name="socket"></param>
     /// <returns></returns>
-    public string Receive(Socket socket)
+    public string ReceiveString(Socket socket)
     {
-        byte[] buffer = new byte[25555]; //todo this
-        if (socket.Available > 0)
+        byte[] buffer;
+        string result = "";
+        if (socket.Available > 0) {
+            buffer = new byte[65535];
             socket.Receive(buffer);
-        return toReceive(buffer);
+            buffer = toReceive(buffer);
+            result = System.Text.UTF8Encoding.UTF8.GetString(buffer, 0, buffer.Length);
+        }
+        return result;
+    }
+    /// <summary>
+    /// Receives pending data (if any) as bytes from specified socket.
+    /// </summary>
+    /// <param name="socket"></param>
+    /// <returns></returns>
+    public byte[] Receive(Socket socket)
+    {
+        byte[] buffer = { 0 };
+        if (socket.Available > 0) {
+            buffer = new byte[65535];
+            socket.Receive(buffer);
+            buffer = toReceive(buffer);
+        }
+        return buffer;
     }
 
     private string HandshakeResponse(byte[] buffer)
@@ -82,7 +113,7 @@ class Websocket
         return handshake;
     }
 
-    private string toReceive(byte[] buffer)
+    private byte[] toReceive(byte[] buffer)
     {
         int packetlength = Convert.ToInt32(buffer[1] - 128);
         int sIndex = 0;
@@ -105,28 +136,27 @@ class Websocket
         }
         for (int i = 0; i < packetlength; i++)
             buffer[sIndex + i] ^= mask[i % 4];
-        //Console.WriteLine("length: " + packetlength);
-        string result = System.Text.UTF8Encoding.UTF8.GetString(buffer, sIndex, packetlength);
-        return result;
+        byte[] bufferResult = new byte[packetlength];
+        Array.Copy(buffer, sIndex, bufferResult, 0, packetlength);
+        return bufferResult;
     }
 
-    private byte[] toSend(string msg)
+    private byte[] toSend(byte[] b)
     {
         byte[] frame;
-        byte[] b = UTF8Encoding.UTF8.GetBytes(msg);
-        if (msg.Length < 126) {
-            frame = new byte[2 + msg.Length];
-            frame[1] = Convert.ToByte(msg.Length);
-            for (int i = 2, j = 0; j < b.Length; i++, j++)
-                frame[i] = b[j];
+        if (b.Length < 126) {
+            frame = new byte[2 + b.Length];
+            frame[1] = Convert.ToByte(b.Length);
+            for (int i = 0; i < b.Length; i++)
+                frame[i+2] = b[i];
         } else {
-            frame = new byte[4 + msg.Length];
+            frame = new byte[4 + b.Length];
             frame[1] = 0x7E;
-            double d = Math.Truncate((double)msg.Length / 255);
+            double d = Math.Truncate((double)b.Length / 255);
             frame[2] = Convert.ToByte(d);
-            frame[3] = Convert.ToByte(msg.Length - d * 255 - d);
-            for (int i = 4, j = 0; j < b.Length; i++, j++)
-                frame[i] = b[j];
+            frame[3] = Convert.ToByte(b.Length - d * 255 - d);
+            for (int i = 4; i < b.Length; i++)
+                frame[i+4] = b[i];
         }
         frame[0] = 0x81;
         //Console.WriteLine("sending: " + BitConverter.ToString(frame, 0, frame.Length));

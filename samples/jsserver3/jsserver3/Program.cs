@@ -10,16 +10,16 @@ namespace jsserver3
 {
     class Program
     {
-        static JSWebsocket websocket;
+        static Websocket websocket;
         static List<ClientInstance> clientlist = new List<ClientInstance>();
 
         static void Main(string[] args)
         {
             Console.Title = "jsserver3";
-            websocket = new JSWebsocket(IPAddress.Any, 8001);
+            websocket = new Websocket(IPAddress.Any, 8001);
 
             while (true) {
-                Socket client = websocket.AcceptPendingClient();
+                Socket client = websocket.AcceptSocket();
                 if (client != null)
                     clientlist.Add(new ClientInstance(client));
 
@@ -38,7 +38,7 @@ namespace jsserver3
                     if (clientlist[i].sClient.Available > 0) {
                         //todo: get everything received esp last received to improve performance
                         try {
-                            string msg = websocket.Receive(clientlist[i].sClient);
+                            string msg = websocket.ReceiveString(clientlist[i].sClient);
                             setClientData(i, msg);
                         } catch {
                             Console.WriteLine("[{0}] corrupted data has been received. Did client close session?");
@@ -56,7 +56,7 @@ namespace jsserver3
                     if (i != j) {
                         try {
                             string userinfo = "i=" + clientlist[j].RemoteEndpoint.Split(':')[1] + " n=" + clientlist[j].Name + " x=" + clientlist[j].X + " y=" + clientlist[j].Y + " p=" + clientlist[j].Pressing + " r=" + clientlist[j].Reset;
-                            websocket.Send(clientlist[i].sClient, userinfo);
+                            websocket.SendString(clientlist[i].sClient, userinfo);
                             //Console.WriteLine(userinfo);
                         } catch {
                             //Console.WriteLine("Sending failed, removing " + clientlist[i].Name + " at " + clientlist[i].RemoteEndpoint);

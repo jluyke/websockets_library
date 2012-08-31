@@ -43,8 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\JSWebsocket.cs">
-      <Link>JSWebsocket.cs</Link>
+    <Compile Include="..\..\..\lib\Websocket.cs">
+      <Link>Websocket.cs</Link>
     </Compile>
     <Compile Include="ClientInstance.cs" />
     <Compile Include="Program.cs" />

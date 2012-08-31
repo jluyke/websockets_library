@@ -10,3 +10,8 @@ c:\users\ethernex\documents\visual studio 2010\Projects\jschat1\jschat1\obj\x86\
 \\DISKSTATION\Main\Programming\GitHub\websockets_library\Examples\jschat1\jschat1\bin\Debug\jschat1.pdb
 C:\Users\Ethernex\Documents\GitHub\websockets_library\Examples\jschat1\jschat1\obj\x86\Debug\jschat1.exe
 C:\Users\Ethernex\Documents\GitHub\websockets_library\Examples\jschat1\jschat1\obj\x86\Debug\jschat1.pdb
+C:\Users\Ethernex\Documents\GitHub\websockets_library\samples\jschat1\jschat1\obj\x86\Debug\jschat1.exe
+C:\Users\Ethernex\Documents\GitHub\websockets_library\samples\jschat1\jschat1\obj\x86\Debug\jschat1.pdb
+C:\Users\Ethernex\Documents\GitHub\websockets_library\samples\jschat1\jschat1\bin\Debug\jschat1.exe
+C:\Users\Ethernex\Documents\GitHub\websockets_library\samples\jschat1\jschat1\bin\Debug\jschat1.pdb
+C:\Users\Ethernex\Documents\GitHub\websockets_library\samples\jschat1\jschat1\obj\x86\Debug\ResolveAssemblyReference.cache

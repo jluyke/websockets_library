@@ -28,7 +28,7 @@ namespace jschat1
 
         static void accept()
         {
-            Socket client = websocket.AcceptPendingClient();
+            Socket client = websocket.AcceptSocket();
             if (client != null)
                 clientlist.Add(new ClientInstance(client));
         }
@@ -39,7 +39,7 @@ namespace jschat1
                 for (int i = 0; i < clientlist.Count; i++) {
                     if (clientlist[i].sClient.Available > 0) {
                         try {
-                            string msg = websocket.Receive(clientlist[i].sClient);
+                            string msg = websocket.ReceiveString(clientlist[i].sClient);
                             if (BitConverter.ToString(UTF8Encoding.UTF8.GetBytes(msg)) == "EF-BF-BD") { //hex: 255, d/c request
                                 Console.WriteLine("[{0}] closed session.", clientlist[i].Name);
                                 if (clientlist[i].Authed) {
@@ -75,7 +75,7 @@ namespace jschat1
             for (int i = 0; i < clientlist.Count; i++) {
                 if (i != index) {
                     try {
-                        websocket.Send(clientlist[i].sClient, msg);
+                        websocket.SendString(clientlist[i].sClient, msg);
                         //Console.WriteLine(userinfo);
                     } catch {
                         Console.WriteLine("Sending failed, removing " + clientlist[i].Name + " at " + clientlist[i].RemoteEndpoint);

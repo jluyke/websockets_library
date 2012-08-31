@@ -43,7 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Websocket.cs">
+    <Compile Include="..\..\..\lib\Websocket.cs">
       <Link>Websocket.cs</Link>
     </Compile>
     <Compile Include="ClientInstance.cs" />
