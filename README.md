@@ -5,8 +5,7 @@ To use the Async version for pong sample, Visual Studio 10 is required which use
 
 This library conforms to the [hybi 17 protocol][3].
 
-Example client
-=====
+#### Example client
 ```javascript
 <script type="text/javascript">
 var socket;
