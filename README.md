@@ -1,5 +1,5 @@
 #### About
-A wip library for [WebSocket][1] servers, written in .net C#. Currently there is only support for sending and receiving strings synchronously. 
+A wip library for [WebSocket][1] servers, written in .net C#. Ability to send and receive in both bytes and strings synchronously. 
 All sample websocket clients, written in javascript, can be found in their respective sample folders.
 
 To use the Async version for pong sample, Visual Studio 10 is required along with [Async CTP][2], or Visual Studio 11.
@@ -12,11 +12,12 @@ static void Main(string[] args)
 {
 	Websocket websocket = new Websocket(IPAddress.Any, 8001);
 	while (true) {
-		Socket client = websocket.AcceptPendingRequest();
+		Socket client = websocket.AcceptSocket();
 		if (client != null) {
-			websocket.Send(client, "hello to you.");
+			websocket.SendString(client, "hello to you.");
+			Thread.Sleep(20);
 			if (client.Available > 0) {
-				string s = websocket.Receive(client);
+				string s = websocket.ReceiveString(client);
 				Console.WriteLine(s);
 			}
 		}
@@ -33,7 +34,7 @@ window.onload = function() {
 }
 
 function connect() {
-	socket = new WebSocket("ws://127.0.0.1:8001/session");
+	socket = new WebSocket("ws://127.0.0.1:8001/");
 	
 	socket.onopen = function(){
 		socket.send("hello world.");
