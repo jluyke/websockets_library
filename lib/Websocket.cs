@@ -9,11 +9,13 @@ using System.Net.Sockets;
 class Websocket
 {
     private TcpListener server;
-
+    //todo
+    //use message types
+    //make compatible with msglength 127, give ability to change
     /// <summary>
     /// Configures and starts server, IP bind and port.
     /// </summary>
-    /// <param name="serverIP">IPAddress.Any may be used.</param>
+    /// <param name="serverIP"></param>
     /// <param name="port"></param>
     public Websocket(IPAddress serverIP, int port)
     {
@@ -31,16 +33,31 @@ class Websocket
         if (server.Pending()) {
             newclient = server.AcceptSocket();
             Console.WriteLine("[{0}] requested handshake.", newclient.RemoteEndPoint);
-            byte[] buffer = new byte[260];
-            int len = newclient.Receive(buffer); //if this is fragmented, full string will not be received and crashes
-            //Console.WriteLine("debug: handshake request length: " + len); //full msg length is 220-240
-            if (len >= 200) {
+            byte[] buffer = new byte[512];
+            int len = newclient.Receive(buffer); //must receive full handshake all at once
+            //Console.WriteLine("debug: handshake request length: " + len);
+            if (len >= 100) {
                 string reply = HandshakeResponse(buffer);
-                newclient.Send(UTF8Encoding.UTF8.GetBytes(reply));
-                Console.WriteLine("[{0}] handshake matched.", newclient.RemoteEndPoint);
+                if (reply.Split(' ')[0] != "Handshake_Failed:") {
+                    newclient.Send(UTF8Encoding.UTF8.GetBytes(reply));
+                    Console.WriteLine("[{0}] handshake matched.", newclient.RemoteEndPoint);
+                } else {
+                    Console.WriteLine(reply);
+                    newclient = null;
+                }
             }
         }
         return newclient;
+    }
+    /// <summary>
+    /// Sends data as byte array to specified socket.
+    /// </summary>
+    /// <param name="socket"></param>
+    /// <param name="message"></param>
+    public void Send(Socket socket, byte[] buffer)
+    {
+        buffer = parseSend(buffer);
+        socket.Send(buffer);
     }
     /// <summary>
     /// Sends data as string to specified socket.
@@ -50,98 +67,127 @@ class Websocket
     public void SendString(Socket socket, string message)
     {
         byte[] buffer = UTF8Encoding.UTF8.GetBytes(message);
-        buffer = toSend(buffer);
-        socket.Send(buffer);
+        Send(socket, buffer);
     }
     /// <summary>
-    /// Sends data as byte array to specified socket.
+    /// Receives pending data as bytes from specified socket. If no data, returns null.
     /// </summary>
     /// <param name="socket"></param>
-    /// <param name="message"></param>
-    public void Send(Socket socket, byte[] buffer)
+    /// <returns>If no data, returns null.</returns>
+    public byte[] Receive(Socket socket)
     {
-        buffer = toSend(buffer);
-        socket.Send(buffer);
+        try {
+            byte[] buffer = new byte[2];
+            if (socket.Available > 0) {
+                socket.Receive(buffer, 2, SocketFlags.None);
+                int msgtype = Convert.ToInt32(buffer[0] - 128);
+                int msglength = Convert.ToInt32(buffer[1] - 128);
+                if (msglength < 126) {
+                    buffer = new byte[msglength + 6];
+                } else if (msglength == 126) {
+                    msglength = Convert.ToUInt16(buffer[2]) * 255 + Convert.ToUInt16(buffer[2]) + Convert.ToUInt16(buffer[3]);
+                    buffer = new byte[msglength + 8];
+                } else if (msglength == 127) { //too long
+                    msglength = 101;
+                    buffer = new byte[2];
+                }
+                buffer[0] = Convert.ToByte(msgtype);
+                buffer[1] = Convert.ToByte(msglength);
+                socket.Receive(buffer, 2, buffer.Length - 2, SocketFlags.None); //for loop?
+                buffer = parseReceive(buffer, msglength);
+                byte[] subBuffer = new byte[msglength];
+                Array.Copy(buffer, buffer.Length - msglength, subBuffer, 0, msglength);
+                return subBuffer;
+            }
+            return null;
+        } catch (Exception e) {
+            Console.WriteLine("Receive method failed: " + e.ToString());
+            return null;
+        }
     }
     /// <summary>
-    /// Receives pending data (if any) as string from specified socket.
+    /// Receives pending data as string from specified socket. If no data, returns null.
     /// </summary>
     /// <param name="socket"></param>
     /// <returns></returns>
     public string ReceiveString(Socket socket)
     {
-        byte[] buffer;
-        string result = "";
-        if (socket.Available > 0) {
-            buffer = new byte[65535];
-            socket.Receive(buffer);
-            buffer = toReceive(buffer);
-            result = System.Text.UTF8Encoding.UTF8.GetString(buffer, 0, buffer.Length);
+        try {
+            return System.Text.UTF8Encoding.UTF8.GetString(Receive(socket));
+        } catch {
+            return null;
         }
-        return result;
-    }
-    /// <summary>
-    /// Receives pending data (if any) as bytes from specified socket.
-    /// </summary>
-    /// <param name="socket"></param>
-    /// <returns></returns>
-    public byte[] Receive(Socket socket)
-    {
-        byte[] buffer = { 0 };
-        if (socket.Available > 0) {
-            buffer = new byte[65535];
-            socket.Receive(buffer);
-            buffer = toReceive(buffer);
-        }
-        return buffer;
     }
 
     private string HandshakeResponse(byte[] buffer)
     {
-        string[] lines = UTF8Encoding.UTF8.GetString(buffer).Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-        string oldkey = lines[5].Split(' ')[1];
-        byte[] data = UTF8Encoding.UTF8.GetBytes(oldkey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-        SHA1 sha = new SHA1CryptoServiceProvider();
-        byte[] hash = sha.ComputeHash(data);
-        string newkey = System.Convert.ToBase64String(hash);
-        //Console.WriteLine(oldkey + " handshake with " + newkey);
-        string handshake =
-            "HTTP/1.1 101 Switching Protocols" + Environment.NewLine +
-            "Upgrade: websocket" + Environment.NewLine +
-            "Connection: Upgrade" + Environment.NewLine +
-            "Sec-WebSocket-Accept: " + newkey + Environment.NewLine + Environment.NewLine;
-        return handshake;
-    }
-
-    private byte[] toReceive(byte[] buffer)
-    {
-        int packetlength = Convert.ToInt32(buffer[1] - 128);
-        int sIndex = 0;
-        byte[] mask = new byte[4];
-        if (packetlength < 126) {
-            sIndex = 6;
-            mask[0] = buffer[2];
-            mask[1] = buffer[3];
-            mask[2] = buffer[4];
-            mask[3] = buffer[5];
-        } else if (packetlength == 126) {
-            sIndex = 8;
-            packetlength = Convert.ToUInt16(buffer[2]) * 255 + Convert.ToUInt16(buffer[2]) + Convert.ToUInt16(buffer[3]);
-            mask[0] = buffer[4];
-            mask[1] = buffer[5];
-            mask[2] = buffer[6];
-            mask[3] = buffer[7];
-        } else if (packetlength == 127) {
-            Console.WriteLine("This number is too big."); //if 127, greater than ~65kB
+        try {
+            string[] lines = UTF8Encoding.UTF8.GetString(buffer).Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            //Console.WriteLine(UTF8Encoding.UTF8.GetString(buffer));
+            //Console.WriteLine("handshake: " + BitConverter.ToString(buffer, 0, buffer.Length));
+            string oldkey = "";
+            for (int i = 0, key = 0, version = 0; i < lines.Length; i++) {
+                string[] split = lines[i].Split(' ');
+                if (split[0] == "Sec-WebSocket-Key:") {
+                    oldkey = lines[i].Split(' ')[1];
+                    key = 1;
+                } else if (split[0] == "Sec-WebSocket-Version:" && split[1] == "13") {
+                    version = 1;
+                }
+                if (key == 1 && version == 1)
+                    break;
+                if (i == lines.Length - 1 || i > 20)
+                    return "Handshake_Failed: Opening handshake does not contain key or correct WS version";
+            }
+            byte[] data = UTF8Encoding.UTF8.GetBytes(oldkey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+            SHA1 sha = new SHA1CryptoServiceProvider();
+            byte[] hash = sha.ComputeHash(data);
+            string newkey = System.Convert.ToBase64String(hash);
+            //Console.WriteLine(oldkey[1] + " handshake with " + newkey);
+            string handshake =
+                "HTTP/1.1 101 Switching Protocols" + Environment.NewLine +
+                "Upgrade: websocket" + Environment.NewLine +
+                "Connection: Upgrade" + Environment.NewLine +
+                "Sec-WebSocket-Accept: " + newkey + Environment.NewLine + Environment.NewLine;
+            return handshake;
+        } catch {
+            return "Handshake_Failed: Parsing opening handshake failed";
         }
-        for (int i = 0; i < packetlength; i++)
-            buffer[sIndex + i] ^= mask[i % 4];
-        byte[] bufferResult = new byte[packetlength];
-        Array.Copy(buffer, sIndex, bufferResult, 0, packetlength);
-        return bufferResult;
     }
 
-    private byte[] toSend(byte[] b)
+    private byte[] parseReceive(byte[] buffer, int msglength)
+    {
+        try {
+            int startIndex = 0;
+            byte[] mask = new byte[4];
+            if (msglength < 126) {
+                startIndex = 6;
+                mask[0] = buffer[2];
+                mask[1] = buffer[3];
+                mask[2] = buffer[4];
+                mask[3] = buffer[5];
+            } else if (msglength >= 126 && msglength <= 65536) {
+                startIndex = 8;
+                mask[0] = buffer[4];
+                mask[1] = buffer[5];
+                mask[2] = buffer[6];
+                mask[3] = buffer[7];
+            } else if (msglength > 65536) {
+                Console.WriteLine("This number is too big."); //greater than ~65kB
+            }
+            for (int i = 0; i < msglength; i++)
+                buffer[startIndex + i] ^= mask[i % 4];
+            return buffer;
+        } catch {
+            Console.WriteLine("ERROR: parse receive failed******");
+            Console.WriteLine(BitConverter.ToString(buffer, 0, buffer.Length));
+            Console.WriteLine(UTF8Encoding.UTF8.GetString(buffer, 0, buffer.Length));
+            Console.WriteLine("*********************************");
+            return buffer;
+        }
+    }
+
+    private byte[] parseSend(byte[] b)
     {
         byte[] frame;
         if (b.Length < 126) {
