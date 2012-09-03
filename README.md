@@ -2,8 +2,7 @@
 A wip library for [WebSocket][1] servers, written in .net C#. Ability to send and receive in both bytes and strings synchronously. 
 All sample websocket clients, written in javascript, can be found in their respective sample folders.
 
-Support for Google Chrome only at this time.
-====
+<b>Support for Google Chrome only at this time.</b>
 
 To use the Async version for pong sample, Visual Studio 10 is required along with [Async CTP][2], or Visual Studio 11.
 
