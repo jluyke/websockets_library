@@ -74,26 +74,30 @@ class Websocket
     public byte[] Receive(Socket socket)
     {
         try {
-            byte[] buffer = new byte[2];
+            byte[] buffer = new byte[11];
             if (socket.Available > 0) {
                 socket.Receive(buffer, 2, SocketFlags.None);
-                int msgtype = Convert.ToInt32(buffer[0]);
+                int msgtype = buffer[0];
                 int fin = msgtype - 128 > 0 ? 1 : 0;
                 int opcode = fin == 1 ? msgtype - 128 : msgtype;
-                int msglength = Convert.ToInt32(buffer[1] - 128);
-                if (msglength < 126) {
+                int msglength = 0;
+                int sindex = 0;
+                if (buffer[1] - 128 < 126) {
+                    sindex = 2;
+                    msglength = buffer[1] - 128;
                     buffer = new byte[msglength + 6];
-                } else if (msglength == 126) {
-                    msglength = Convert.ToUInt16(buffer[2]) * 255 + Convert.ToUInt16(buffer[2]) + Convert.ToUInt16(buffer[3]);
+                } else if (buffer[1] - 128 == 126) {
+                    sindex = 4;
+                    socket.Receive(buffer, 2, 2, SocketFlags.None);
+                    msglength = buffer[2] * 255 + buffer[2] + buffer[3];
                     buffer = new byte[msglength + 8];
-                } else if (msglength == 127) { //too long
-                    msglength = 101;
-                    buffer = new byte[2];
+                } else if (buffer[1] - 128 == 127) {
+                    //too long
                 }
-                buffer[0] = Convert.ToByte(msgtype);
-                buffer[1] = Convert.ToByte(msglength);
-                //socket.Receive(buffer, 2, buffer.Length - 2, SocketFlags.None); //old
-                for (int len = msglength, savbl = socket.Available > buffer.Length - 2 ? buffer.Length - 2 : socket.Available, i = 2; len > 0; len -= savbl, i += savbl, savbl = socket.Available > buffer.Length - 2 ? buffer.Length - 2 : socket.Available)
+                buffer[0] = Convert.ToByte(0x00); //placeholders
+                buffer[1] = Convert.ToByte(0x00);
+                //socket.Receive(buffer, sindex, buffer.Length - sindex, SocketFlags.None); //old
+                for (int len = msglength, savbl = socket.Available > buffer.Length - sindex ? buffer.Length - sindex : socket.Available, i = sindex; len > 0; len -= savbl, i += savbl, savbl = socket.Available > buffer.Length - sindex ? buffer.Length - sindex : socket.Available)
                     socket.Receive(buffer, i, savbl, SocketFlags.None); //attempts to put packets of same msg together
                 buffer = parseReceive(buffer, msglength);
                 byte[] subBuffer = new byte[msglength + 2]; //make room for fin and opcode
