@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 
 namespace jsserver3
 {
@@ -26,8 +25,6 @@ namespace jsserver3
                 receiveData();
 
                 sendData();
-
-                Thread.Sleep(20);
             }
         }
 
@@ -65,9 +62,6 @@ namespace jsserver3
                         } catch {
                             //Console.WriteLine("Sending failed, removing " + clientlist[i].Name + " at " + clientlist[i].RemoteEndpoint);
                             clientlist.RemoveAt(i);
-                            //removeList.Add(i);
-                            //i++;
-                            //j = 0;
                         }
                     }
                 }

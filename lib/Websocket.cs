@@ -92,9 +92,9 @@ class Websocket
                 }
                 buffer[0] = Convert.ToByte(msgtype);
                 buffer[1] = Convert.ToByte(msglength);
-                socket.Receive(buffer, 2, buffer.Length - 2, SocketFlags.None); //old
-                //for (int i = 2, len = socket.Available; i < buffer.Length - 2; i += len, len = socket.Available)
-                    //socket.Receive(buffer, i, len, SocketFlags.None); //puts one msg together, possibly split by packets
+                //socket.Receive(buffer, 2, buffer.Length - 2, SocketFlags.None); //old
+                for (int len = msglength, savbl = socket.Available > buffer.Length - 2 ? buffer.Length - 2 : socket.Available, i = 2; len > 0; len -= savbl, i += savbl, savbl = socket.Available > buffer.Length - 2 ? buffer.Length - 2 : socket.Available)
+                    socket.Receive(buffer, i, savbl, SocketFlags.None); //attempts to put packets of same msg together
                 buffer = parseReceive(buffer, msglength);
                 byte[] subBuffer = new byte[msglength + 2]; //make room for fin and opcode
                 Array.Copy(buffer, buffer.Length - msglength, subBuffer, 2, msglength);
