@@ -58,7 +58,6 @@ namespace jsserver3
                         try {
                             string userinfo = "i=" + clientlist[j].RemoteEndpoint.Split(':')[1] + " n=" + clientlist[j].Name + " x=" + clientlist[j].X + " y=" + clientlist[j].Y + " p=" + clientlist[j].Pressing + " r=" + clientlist[j].Reset;
                             websocket.SendString(clientlist[i].sClient, userinfo);
-                            //Console.WriteLine(userinfo);
                         } catch {
                             //Console.WriteLine("Sending failed, removing " + clientlist[i].Name + " at " + clientlist[i].RemoteEndpoint);
                             clientlist.RemoveAt(i);
