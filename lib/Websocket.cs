@@ -9,9 +9,6 @@ using System.Net.Sockets;
 class Websocket
 {
     private TcpListener server;
-    //todo
-    //use message types
-    //make compatible with msglength 127, give ability to change
     /// <summary>
     /// Configures and starts server, IP bind and port.
     /// </summary>
@@ -80,7 +77,9 @@ class Websocket
             byte[] buffer = new byte[2];
             if (socket.Available > 0) {
                 socket.Receive(buffer, 2, SocketFlags.None);
-                int msgtype = Convert.ToInt32(buffer[0] - 128);
+                int msgtype = Convert.ToInt32(buffer[0]);
+                int fin = msgtype - 128 > 0 ? 1 : 0;
+                int opcode = fin == 1 ? msgtype - 128 : msgtype;
                 int msglength = Convert.ToInt32(buffer[1] - 128);
                 if (msglength < 126) {
                     buffer = new byte[msglength + 6];
@@ -93,13 +92,18 @@ class Websocket
                 }
                 buffer[0] = Convert.ToByte(msgtype);
                 buffer[1] = Convert.ToByte(msglength);
-                socket.Receive(buffer, 2, buffer.Length - 2, SocketFlags.None); //for loop?
+                socket.Receive(buffer, 2, buffer.Length - 2, SocketFlags.None); //old
+                //for (int i = 2, len = socket.Available; i < buffer.Length - 2; i += len, len = socket.Available)
+                    //socket.Receive(buffer, i, len, SocketFlags.None); //puts one msg together, possibly split by packets
                 buffer = parseReceive(buffer, msglength);
-                byte[] subBuffer = new byte[msglength];
-                Array.Copy(buffer, buffer.Length - msglength, subBuffer, 0, msglength);
+                byte[] subBuffer = new byte[msglength + 2]; //make room for fin and opcode
+                Array.Copy(buffer, buffer.Length - msglength, subBuffer, 2, msglength);
+                subBuffer[0] = Convert.ToByte(fin);
+                subBuffer[1] = Convert.ToByte(opcode);
                 return subBuffer;
+            } else {
+                return null;
             }
-            return null;
         } catch (Exception e) {
             Console.WriteLine("Receive method failed: " + e.ToString());
             return null;
@@ -113,7 +117,8 @@ class Websocket
     public string ReceiveString(Socket socket)
     {
         try {
-            return System.Text.UTF8Encoding.UTF8.GetString(Receive(socket));
+            byte[] received = Receive(socket);
+            return received[0].ToString() + received[1].ToString() + System.Text.UTF8Encoding.UTF8.GetString(received, 2, received.Length - 2);
         } catch {
             return null;
         }

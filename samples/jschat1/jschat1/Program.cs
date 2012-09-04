@@ -40,7 +40,19 @@ namespace jschat1
                     if (clientlist[i].sClient.Available > 0) {
                         try {
                             string msg = websocket.ReceiveString(clientlist[i].sClient);
-                            if (BitConverter.ToString(UTF8Encoding.UTF8.GetBytes(msg)) == "EF-BF-BD") { //hex: 255, d/c request
+                            string fin = msg.Substring(0, 1);
+                            string opcode = msg.Substring(1, 1);
+                            msg = msg.Substring(2);
+                            if (fin == "1" && opcode == "1") {
+                                if (clientlist[i].Authed) {
+                                    Console.WriteLine("[{0}]: {1}", clientlist[i].Name, msg);
+                                    send(i, clientlist[i].Name + ": " + msg);
+                                } else {
+                                    clientlist[i].setName(msg);
+                                    Console.WriteLine("[{0}] authenticated and changed name to [{1}]", clientlist[i].RemoteEndpoint, clientlist[i].Name);
+                                    send(i, clientlist[i].Name + " has connected.");
+                                }
+                            } else if (fin == "1" && opcode == "8") {
                                 Console.WriteLine("[{0}] closed session.", clientlist[i].Name);
                                 if (clientlist[i].Authed) {
                                     send(i, clientlist[i].Name + " has disconnected.");
@@ -49,15 +61,6 @@ namespace jschat1
                                 } else {
                                     clientlist[i].sClient.Close();
                                     clientlist.RemoveAt(i);
-                                }
-                            } else {
-                                if (clientlist[i].Authed) {
-                                    Console.WriteLine("[{0}]: {1}", clientlist[i].Name, msg);
-                                    send(i, clientlist[i].Name + ": " + msg);
-                                } else {
-                                    clientlist[i].setName(msg);
-                                    Console.WriteLine("[{0}] authenticated and changed name to [{1}]", clientlist[i].RemoteEndpoint, clientlist[i].Name);
-                                    send(i, clientlist[i].Name + " has connected.");
                                 }
                             }
                         } catch (Exception e) {

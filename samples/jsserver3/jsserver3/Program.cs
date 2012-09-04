@@ -36,10 +36,14 @@ namespace jsserver3
             if (clientlist.Count > 0) {
                 for (int i = 0; i < clientlist.Count; i++) {
                     if (clientlist[i].sClient.Available > 0) {
-                        //todo: get everything received esp last received to improve performance
                         try {
                             string msg = websocket.ReceiveString(clientlist[i].sClient);
-                            setClientData(i, msg);
+                            string fin = msg.Substring(0, 1);
+                            string opcode = msg.Substring(1, 1);
+                            msg = msg.Substring(2);
+                            //If fin = 1 (final) and opcode = 1 (text frame)
+                            if (fin == "1" && opcode == "1")
+                                setClientData(i, msg);
                         } catch {
                             Console.WriteLine("[{0}] corrupted data has been received. Did client close session?");
                         }
