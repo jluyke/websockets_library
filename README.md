@@ -2,9 +2,25 @@
 A wip library for [WebSocket][1] servers, written in .net C#. Ability to send and receive in both bytes and strings synchronously. 
 All sample websocket clients, written in javascript, can be found in their respective sample folders.
 
-To use the Async version for pong sample, Visual Studio 10 is required along with [Async CTP][2], or Visual Studio 11.
-
-This library conforms to the [WebSocket Proposed Standard][3].
+All message receives will be preceeded by fin then opcode, e.g. "11Hello World". Quoted from the [WebSocket Proposed Standard][3]:
+```javscript
+EXAMPLE: For a text message sent as three fragments, the first
+      fragment would have an opcode of 0x1 and a FIN bit clear, the
+      second fragment would have an opcode of 0x0 and a FIN bit clear,
+      and the third fragment would have an opcode of 0x0 and a FIN bit
+      that is set.
+      
+      Opcodes
+      
+      *  %x0 denotes a continuation frame
+      *  %x1 denotes a text frame
+      *  %x2 denotes a binary frame
+      *  %x3-7 are reserved for further non-control frames
+      *  %x8 denotes a connection close
+      *  %x9 denotes a ping
+      *  %xA denotes a pong
+      *  %xB-F are reserved for further control frames
+```
 
 #### Example server
 ```csharp
