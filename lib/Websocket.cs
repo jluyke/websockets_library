@@ -97,8 +97,10 @@ class Websocket
                 buffer[0] = Convert.ToByte(0x00); //placeholders
                 buffer[1] = Convert.ToByte(0x00);
                 //socket.Receive(buffer, sindex, buffer.Length - sindex, SocketFlags.None); //old
-                for (int len = msglength, savbl = socket.Available > buffer.Length - sindex ? buffer.Length - sindex : socket.Available, i = sindex; len > 0; len -= savbl, i += savbl, savbl = socket.Available > buffer.Length - sindex ? buffer.Length - sindex : socket.Available)
+                for (int len = msglength, savbl = 0, i = sindex; len > 0; len -= savbl, i += savbl) {
+                    savbl = socket.Available > buffer.Length - sindex ? buffer.Length - sindex : socket.Available;
                     socket.Receive(buffer, i, savbl, SocketFlags.None); //attempts to put packets of same msg together
+                }
                 buffer = parseReceive(buffer, msglength);
                 byte[] subBuffer = new byte[msglength + 2]; //make room for fin and opcode
                 Array.Copy(buffer, buffer.Length - msglength, subBuffer, 2, msglength);
@@ -122,7 +124,7 @@ class Websocket
     {
         try {
             byte[] received = Receive(socket);
-            return received[0].ToString() + received[1].ToString() + System.Text.UTF8Encoding.UTF8.GetString(received, 2, received.Length - 2);
+            return received[0].ToString("X") + received[1].ToString("X") + System.Text.UTF8Encoding.UTF8.GetString(received, 2, received.Length - 2);
         } catch {
             return null;
         }
