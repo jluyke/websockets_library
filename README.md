@@ -1,8 +1,9 @@
 #### About
-A library for [WebSocket][1] servers, written in .net C#. Ability to send and receive in both bytes and strings. 
+A library for [WebSocket][1] servers, written in .Net C#. Ability to send and receive in both bytes and strings. 
 Sample websocket clients, written in javascript, can be found in their respective sample folders.
 
-All message receives will be preceeded by fin then opcode, e.g. "11Hello World". Quoted from the [WebSocket Proposed Standard][3]:
+All message receives will be preceeded by fin then opcode, e.g. "11Hello World" (text frame) or "18" (close connection).
+Quoted from the [WebSocket Proposed Standard][3]:
 ```javscript
 EXAMPLE: For a text message sent as three fragments, the first
 fragment would have an opcode of 0x1 and a FIN bit clear, the
