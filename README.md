@@ -3,11 +3,11 @@ A library for a [WebSocket][1] server, written in .Net C#. Ability to send and r
 
 #### Methods
 ```csharp
-Websocket(IPAddress, port);			- initialize class, starts server
-websocket.AcceptSocket();			- Accepts and pairs websocket client, returns client socket
+Websocket(IPAddress, port);				- initialize class, starts server
+websocket.AcceptSocket();				- Accepts and pairs websocket client, returns client socket
 websocket.Send(Socket, byte[]);			- Sends byte[] to socket
-websocket.SendString(Socket, String);		- Sends string to socket
-websocket.Receive(Socket);			- Receives pending data as byte[]
+websocket.SendString(Socket, String);	- Sends string to socket
+websocket.Receive(Socket);				- Receives pending data as byte[]
 websocket.ReceiveString(Socket);		- Receives pending data as string
 ```
 
@@ -18,8 +18,8 @@ static void Main(string[] args)
 	Websocket websocket = new Websocket(IPAddress.Any, 8001);
 	Socket client = websocket.AcceptSocket();
 	websocket.SendString(client, "hello to you.");
-	string rec = websocket.ReceiveString(client);
-	Console.WriteLine(rec);
+	string str = websocket.ReceiveString(client);
+	Console.WriteLine(str);
 }
 ```
 
