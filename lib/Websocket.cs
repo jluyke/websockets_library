@@ -21,29 +21,33 @@ class Websocket
         server.Start();
     }
     /// <summary>
-    /// Accepts and pairs server and client with handshake, returns client socket. If no pending clients, returns null.
+    /// Accepts and pairs server and pending client with handshake, returns client socket. If no pending clients, returns null.
     /// </summary>
     /// <returns>Accepted socket</returns>
     public Socket AcceptSocket()
     {
-        Socket newclient = null;
-        newclient = server.AcceptSocket();
-        Console.WriteLine("[{0}] requested handshake.", newclient.RemoteEndPoint);
-        byte[] buffer = new byte[512];
-        int len = newclient.Receive(buffer); //must receive full handshake all at once
-        //Console.WriteLine("debug: handshake request length: " + len);
-        if (len >= 100) {
-            string reply = HandshakeResponse(buffer);
-            Console.WriteLine(reply);
-            if (reply.Split(' ')[0] != "Handshake_Failed:") {
-                newclient.Send(UTF8Encoding.UTF8.GetBytes(reply));
-                Console.WriteLine("[{0}] handshake matched.", newclient.RemoteEndPoint);
-            } else {
-                Console.WriteLine(reply);
-                newclient = null;
-            }
-        }
+        Socket newclient = server.AcceptSocket();
         return newclient;
+    }
+    /// <summary>
+    /// Receives bytes and sends matching handshake, returns false if failed.
+    /// </summary>
+    /// <param name="socket"></param>
+    /// <returns></returns>
+    public bool Handshake(Socket socket)
+    {
+        byte[] buffer = new byte[512];
+        socket.Receive(buffer);
+        if (buffer[0] == 0x47 && buffer[1] == 0x45) {
+            string reply = HandshakeResponse(buffer);
+            if (reply == null)
+                return false;
+            socket.Send(UTF8Encoding.UTF8.GetBytes(reply));
+            Console.WriteLine("[{0}] handshake matched.", socket.RemoteEndPoint);
+            return true;
+        } else {
+            return false;
+        }
     }
     /// <summary>
     /// Sends data as byte array to specified socket.
@@ -73,7 +77,7 @@ class Websocket
     public byte[] Receive(Socket socket)
     {
         try {
-            byte[] buffer = new byte[11];
+            byte[] buffer = new byte[2];
             if (socket.Available > 0) {
                 socket.Receive(buffer, 2, SocketFlags.None);
                 int msgtype = buffer[0];
@@ -136,18 +140,21 @@ class Websocket
             //Console.WriteLine(UTF8Encoding.UTF8.GetString(buffer));
             //Console.WriteLine("handshake: " + BitConverter.ToString(buffer, 0, buffer.Length));
             string oldkey = "";
-            for (int i = 0, key = 0, version = 0; i < lines.Length; i++) {
+            bool key = false, version = false;
+            for (int i = 0; i < lines.Length; i++) {
                 string[] split = lines[i].Split(' ');
                 if (split[0] == "Sec-WebSocket-Key:") {
                     oldkey = lines[i].Split(' ')[1];
-                    key = 1;
+                    key = true;
                 } else if (split[0] == "Sec-WebSocket-Version:" && split[1] == "13") {
-                    version = 1;
+                    version = true;
                 }
-                if (key == 1 && version == 1)
+                if (key == true && version == true)
                     break;
-                if (i == lines.Length - 1 || i > 20)
-                    return "Handshake_Failed: Opening handshake does not contain key or correct WS version";
+                if (i == lines.Length - 1 || i > 20) {
+                    Console.WriteLine("Handshake failed: Does not contain key or correct WS version");
+                    return null;
+                }
             }
             byte[] data = UTF8Encoding.UTF8.GetBytes(oldkey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
             SHA1 sha = new SHA1CryptoServiceProvider();
@@ -160,8 +167,9 @@ class Websocket
                 "Connection: Upgrade" + Environment.NewLine +
                 "Sec-WebSocket-Accept: " + newkey + Environment.NewLine + Environment.NewLine;
             return handshake;
-        } catch {
-            return "Handshake_Failed: Parsing opening handshake failed";
+        } catch (Exception e) {
+            Console.WriteLine("Handshake Failed: " + e.ToString());
+            return null;
         }
     }
 
