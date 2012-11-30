@@ -27,21 +27,20 @@ class Websocket
     public Socket AcceptSocket()
     {
         Socket newclient = null;
-        if (server.Pending()) {
-            newclient = server.AcceptSocket();
-            Console.WriteLine("[{0}] requested handshake.", newclient.RemoteEndPoint);
-            byte[] buffer = new byte[512];
-            int len = newclient.Receive(buffer); //must receive full handshake all at once
-            //Console.WriteLine("debug: handshake request length: " + len);
-            if (len >= 100) {
-                string reply = HandshakeResponse(buffer);
-                if (reply.Split(' ')[0] != "Handshake_Failed:") {
-                    newclient.Send(UTF8Encoding.UTF8.GetBytes(reply));
-                    Console.WriteLine("[{0}] handshake matched.", newclient.RemoteEndPoint);
-                } else {
-                    Console.WriteLine(reply);
-                    newclient = null;
-                }
+        newclient = server.AcceptSocket();
+        Console.WriteLine("[{0}] requested handshake.", newclient.RemoteEndPoint);
+        byte[] buffer = new byte[512];
+        int len = newclient.Receive(buffer); //must receive full handshake all at once
+        //Console.WriteLine("debug: handshake request length: " + len);
+        if (len >= 100) {
+            string reply = HandshakeResponse(buffer);
+            Console.WriteLine(reply);
+            if (reply.Split(' ')[0] != "Handshake_Failed:") {
+                newclient.Send(UTF8Encoding.UTF8.GetBytes(reply));
+                Console.WriteLine("[{0}] handshake matched.", newclient.RemoteEndPoint);
+            } else {
+                Console.WriteLine(reply);
+                newclient = null;
             }
         }
         return newclient;
