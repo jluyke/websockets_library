@@ -1,26 +1,14 @@
 #### About
-A library for [WebSocket][1] servers, written in .Net C#. Ability to send and receive in both bytes and strings. 
-Sample websocket clients, written in javascript, can be found in their respective sample folders.
+A library for a [WebSocket][1] server, written in .Net C#. Ability to send and receive in both bytes and strings. 
 
-All message receives will be preceeded by fin then opcode, e.g. "11Hello World" (text frame) or "18" (close connection).
-Quoted from the [WebSocket Proposed Standard][3]:
-```javscript
-EXAMPLE: For a text message sent as three fragments, the first
-fragment would have an opcode of 0x1 and a FIN bit clear, the
-second fragment would have an opcode of 0x0 and a FIN bit clear,
-and the third fragment would have an opcode of 0x0 and a FIN bit
-that is set.
-      
-Opcodes
-      
-*  %x0 denotes a continuation frame
-*  %x1 denotes a text frame
-*  %x2 denotes a binary frame
-*  %x3-7 are reserved for further non-control frames
-*  %x8 denotes a connection close
-*  %x9 denotes a ping
-*  %xA denotes a pong
-*  %xB-F are reserved for further control frames
+#### Methods
+```csharp
+Websocket(IPAddress, port);			- initialize class, starts server
+websocket.AcceptSocket();			- Accepts and pairs websocket client, returns client socket
+websocket.Send(Socket, byte[]);			- Sends byte[] to socket
+websocket.SendString(Socket, String);		- Sends string to socket
+websocket.Receive(Socket);			- Receives pending data as byte[]
+websocket.ReceiveString(Socket);		- Receives pending data as string
 ```
 
 #### Example server
@@ -28,17 +16,10 @@ Opcodes
 static void Main(string[] args)
 {
 	Websocket websocket = new Websocket(IPAddress.Any, 8001);
-	while (true) {
-		Socket client = websocket.AcceptSocket();
-		if (client != null) {
-			websocket.SendString(client, "hello to you.");
-			Thread.Sleep(20);
-			if (client.Available > 0) {
-				string s = websocket.ReceiveString(client);
-				Console.WriteLine(s);
-			}
-		}
-	}
+	Socket client = websocket.AcceptSocket();
+	websocket.SendString(client, "hello to you.");
+	string rec = websocket.ReceiveString(client);
+	Console.WriteLine(rec);
 }
 ```
 
@@ -61,6 +42,28 @@ function connect() {
 	}
 }
 </script>
+```
+Sample websocket clients, written in javascript, can be found in their respective sample folders.
+
+All message receives will be preceeded by fin then opcode, e.g. "11Hello World" (text frame) or "18" (close connection).
+Quoted from the [WebSocket Proposed Standard][3]:
+```javscript
+EXAMPLE: For a text message sent as three fragments, the first
+fragment would have an opcode of 0x1 and a FIN bit clear, the
+second fragment would have an opcode of 0x0 and a FIN bit clear,
+and the third fragment would have an opcode of 0x0 and a FIN bit
+that is set.
+      
+Opcodes
+      
+*  %x0 denotes a continuation frame
+*  %x1 denotes a text frame
+*  %x2 denotes a binary frame
+*  %x3-7 are reserved for further non-control frames
+*  %x8 denotes a connection close
+*  %x9 denotes a ping
+*  %xA denotes a pong
+*  %xB-F are reserved for further control frames
 ```
 
 [1]: http://en.wikipedia.org/wiki/WebSocket
