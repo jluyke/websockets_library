@@ -1,5 +1,5 @@
 #### About
-A library for a [WebSocket][1] server, written in .Net C#. Ability to send and receive in both bytes and strings. 
+A library for a [WebSocket][1] server, written in .Net C#. Ability to send and receive in both bytes and strings. Works best with Google Chrome as client.
 
 #### Methods
 ```csharp
