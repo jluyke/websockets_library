@@ -2,7 +2,7 @@
 A library for a [WebSocket][1] server, written in .Net C#. Ability to send and receive in both bytes and strings. 
 Google Chrome supports the latest websocket standard, example uses include chat or game applications.
 
-#### Methods
+#### How to use
 ```csharp
 Websocket(IPAddress, port);				- initialize class, starts server
 websocket.AcceptSocket();				- Accepts and pairs websocket client, returns client socket
