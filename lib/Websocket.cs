@@ -8,7 +8,7 @@ using System.Net.Sockets;
 
 class Websocket
 {
-    private TcpListener server;
+    public TcpListener server { get; private set; }
     /// <summary>
     /// Configures and starts server, IP bind and port.
     /// </summary>
@@ -26,8 +26,7 @@ class Websocket
     /// <returns>Accepted socket</returns>
     public Socket AcceptSocket()
     {
-        Socket newclient = server.AcceptSocket();
-        return newclient;
+        return server.AcceptSocket();
     }
     /// <summary>
     /// Receives bytes and sends matching handshake, returns false if failed.
@@ -36,16 +35,21 @@ class Websocket
     /// <returns></returns>
     public bool Handshake(Socket socket)
     {
-        byte[] buffer = new byte[512];
-        socket.Receive(buffer);
-        if (buffer[0] == 0x47 && buffer[1] == 0x45) {
-            string reply = HandshakeResponse(buffer);
-            if (reply == null)
+        try {
+            byte[] buffer = new byte[512];
+            socket.Receive(buffer);
+            if (buffer[0] == 0x47 && buffer[1] == 0x45) {
+                string reply = HandshakeResponse(buffer);
+                if (reply == null)
+                    return false;
+                socket.Send(UTF8Encoding.UTF8.GetBytes(reply));
+                Console.WriteLine("[{0}] handshake matched.", socket.RemoteEndPoint);
+                return true;
+            } else {
                 return false;
-            socket.Send(UTF8Encoding.UTF8.GetBytes(reply));
-            Console.WriteLine("[{0}] handshake matched.", socket.RemoteEndPoint);
-            return true;
-        } else {
+            }
+        } catch (Exception e) {
+            Console.WriteLine("Handshake failed:" + Environment.NewLine + e.StackTrace.ToString() + Environment.NewLine);
             return false;
         }
     }
