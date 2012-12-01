@@ -19,11 +19,11 @@ static void Main(string[] args)
 {
 	Websocket websocket = new Websocket(IPAddress.Any, 8001);
 	Socket client = websocket.AcceptSocket();
-	if (websocket.Handshake(client)) {
-		websocket.SendString(client, "hello to you.");
-		string str = websocket.ReceiveString(client);
-		Console.WriteLine(str);
-	}
+	websocket.Handshake(client); //can use if statement
+	websocket.SendString(client, "hello to you.");
+	string str = websocket.ReceiveString(client);
+	Console.WriteLine(str);
+	
 }
 ```
 
