@@ -51,10 +51,9 @@ Sample websocket clients, written in javascript, can be found in their respectiv
 
 #### More info
 
-All message receives will be preceeded by fin then opcode, e.g. "11Hello World" (first&final text frame) or "18" (close connection).
+All message receives will be preceeded by fin then opcode(FIN bit,Opcode), e.g. "11Hello World" (first&final text frame) or "18" (close connection).
 Quoted from the [WebSocket Proposed Standard][3]:
 ```javscript
-[FIN bit, Opcode]
 EXAMPLE: For a text message sent as three fragments, the first
 fragment would have an opcode of 0x1 and a FIN bit clear (01), the
 second fragment would have an opcode of 0x0 and a FIN bit clear (00),
