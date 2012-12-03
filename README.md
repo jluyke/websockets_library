@@ -5,8 +5,8 @@ Google Chrome supports the latest websocket standard, example uses include chat 
 #### How to use
 ```csharp
 Websocket(IPAddress, port);				- initialize class, starts server
-websocket.AcceptSocket();				- Accepts pending socket, returns socket
-websocket.Handshake();					- Receives request handshake bytes and sends reply, true if succeeds
+websocket.AcceptSocket();				- Accepts pending socket (can use websocket.server.pending())
+websocket.Handshake(Socket);			- Receives request handshake bytes and sends reply, true if succeeds
 websocket.Send(Socket, byte[]);			- Sends byte[] to socket
 websocket.SendString(Socket, string);	- Sends string to socket
 websocket.Receive(Socket);				- Receives pending data as byte[]
